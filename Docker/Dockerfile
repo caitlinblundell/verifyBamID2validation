@@ -6,19 +6,18 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV LD_LIBRARY_PATH=/usr/local/lib
 
 # apt update and install build dependencies
-# TODO: pin package versions and check if autoconf, automake, and libtool are needed
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
-    g++ \
+    g++=4:9.3.0-1ubuntu2 \
     make \
     cmake \
     git \
     wget \
-    libbz2-dev \
+    libbz2-dev=1.0.8-2 \
     libcurl4-openssl-dev \
     zlib1g-dev \
     liblzma-dev \
-    lbzip2 \
     autoconf \
     automake \
     libtool 
@@ -44,10 +43,10 @@ FROM ubuntu:24.04
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install runtime dependencies
-# TODO: pin package versions
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgomp1 \
-    libcurl4-openssl-dev \
+    libgomp1=14.2.0-4ubuntu2~24.04 \
+    libcurl4-openssl-dev=8.5.0-2ubuntu10.6 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy VerifyBamID binary and shared libs from build stage
@@ -61,7 +60,7 @@ ENV LD_LIBRARY_PATH=/usr/local/lib
 RUN chmod +x /usr/local/bin/VerifyBamID2
 
 # Test that the binary works
-RUN VerifyBamID2 --help || (echo "VerifyBamID2 binary test failed" && exit 1)
+RUN VerifyBamID2 --help 2>&1 | grep -q "^ Version:" || (echo "VerifyBamID2 binary test failed" && exit 1)
 
 # Default command
 CMD ["VerifyBamID2"]
