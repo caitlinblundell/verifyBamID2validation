@@ -4,6 +4,12 @@
   "summary": "v2.0.1: Detects and estimates inter-sample contamination in an NGS run using pooled allele frequencies",
   "dxapi": "1.0.0",
   "version": "0.0.1",
+  "bundledDepends": [
+  {
+    "name": "verifybamid2.tar.gz",
+    "id": "file-J251xyj0Jy1VvP3QZ00jjZ3y"
+  }
+],
   "inputSpec": [
     {
       "name": "reference_fasta",
@@ -83,11 +89,6 @@
     }
   ],
   "runSpec": {
-    "timeoutPolicy": {
-      "*": {
-        "hours": 24
-      }
-    },
     "interpreter": "bash",
     "file": "src/verifyBamID2_v2.0.1.sh",
     "distribution": "Ubuntu",

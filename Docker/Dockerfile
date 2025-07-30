@@ -62,5 +62,4 @@ RUN chmod +x /usr/local/bin/VerifyBamID2
 # Test that the binary works
 RUN VerifyBamID2 --help 2>&1 | grep -q "^ Version:" || (echo "VerifyBamID2 binary test failed" && exit 1)
 
-# Default command
-CMD ["VerifyBamID2"]
+ENTRYPOINT ["/usr/local/bin/VerifyBamID2"]

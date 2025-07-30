@@ -35,26 +35,21 @@ if [ "$skip" != "true" ]; then
     mkdir -p /home/dnanexus/out/selfSM
     mkdir -p /home/dnanexus/out/ancestry
 
-    # Location of verifyBamID2 Dockerfile
-    docker_file_id=
-
-    #read the DNA Nexus api key as a variable
-    API_KEY_wquotes=$(echo $DX_SECURITY_CONTEXT |  jq '.auth_token')
-    API_KEY=$(echo "$API_KEY_wquotes" | sed 's/"//g')
-    echo "$API_KEY"
-
-    # Get Docker image from 001_Tools
-    dx download $docker_file_id --auth "${API_KEY}"
-    docker_file=$(dx describe ${docker_file_id} --name)
-    DOCKERIMAGENAME=`tar xfO ${docker_file} manifest.json | sed -E 's/.*"RepoTags":\["?([^"]*)"?.*/\1/'`
-    docker load < /home/dnanexus/"${docker_file}"
+    # Safely decompress the Docker tarball
+    gunzip -c /home/dnanexus/verifybamid2.tar.gz > /home/dnanexus/verifybamid2.tar
 
 
-    # Run verifyBamID2 using Docker
+    # Load the Docker image and capture the image name
+    DOCKERIMAGENAME=$(docker load < /home/dnanexus/verifybamid2.tar | \
+        grep "Loaded image:" | cut -d' ' -f3)
+    rm /home/dnanexus/verifybamid2.tar
+
+
+    # Run verifyBamID2
 
     docker run -v /home/dnanexus:/home/dnanexus/ \
         --rm \
-        $DOCKERIMAGENAME \
+        "$DOCKERIMAGENAME" \
         VerifyBamID2 \
         --SVDPrefix /home/dnanexus/in/svd_prefix/"$svd_prefix_name" \
         --Reference /home/dnanexus/in/reference_fasta/"$reference_fasta_name" \
@@ -63,8 +58,8 @@ if [ "$skip" != "true" ]; then
         --Verbose
 
     # Move output files to output directories
-    mv "$bam_prefix".selfSM /home/dnanexus/out/selfSM
-    mv "$bam_prefix".Ancestry /home/dnanexus/out/ancestry
+    mv /home/dnanexus/out/"$bam_prefix".selfSM /home/dnanexus/out/selfSM
+    mv /home/dnanexus/out/"$bam_prefix".Ancestry /home/dnanexus/out/ancestry
 
     # Upload output files to DNAnexus
     dx-upload-all-outputs
