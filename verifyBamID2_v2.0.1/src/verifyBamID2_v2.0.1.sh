@@ -1,63 +1,72 @@
 #!/bin/bash
-# verifyBamID2_v2.0.1 0.0.1
+# verifyBamID2_v2.0.1 0.0.2
 
-# Basic execution pattern: Your app will run on a single machine from
-# beginning to end.
-#
-# Your job's input variables (if any) will be loaded as environment
-# variables before this script runs.  Any array inputs will be loaded
-# as bash arrays.
-#
-# Any code outside of main() (or any entry point you may add) is
-# ALWAYS executed, followed by running the entry point itself.
-#
-# See https://documentation.dnanexus.com/developer for tutorials on how
-# to modify this file.
+# The following line causes bash to exit at any point if there is any error
+# and to output each line as it is executed -- useful for debugging
+set -e -x -o pipefail
 
-main() {
 
-    echo "Value of reference_fasta: '$reference_fasta'"
-    echo "Value of bam_file: '$bam_file'"
+# If skip is not set to true, then proceed
+if [ "$skip" != "true" ]; then
+ 
+    # Log input variables
+       
+    echo "Value of reference_fasta: $reference_fasta"
+    echo "Value of input_bam: $input_bam"
+    echo "Value of input_bam_index: $input_bam_index"
+    echo "Value of svd_prefix: $svd_prefix"
 
-    # The following line(s) use the dx command-line tool to download your file
-    # inputs to the local file system using variable names for the filenames. To
-    # recover the original filenames, you can use the output of "dx describe
-    # "$variable" --name".
+    # Get input filenames as strings
 
-    dx download "$reference_fasta" -o reference_fasta
+    reference_fasta_name=$(dx describe --name "$reference_fasta")
+    input_bam_name=$(dx describe --name "$input_bam")
+    input_bam_index_name=$(dx describe --name "$input_bam_index")
+    svd_prefix_name=$(dx describe --name "$svd_prefix")
 
-    dx download "$bam_file" -o bam_file
 
-    # Fill in your application code here.
-    #
-    # To report any recognized errors in the correct format in
-    # $HOME/job_error.json and exit this script, you can use the
-    # dx-jobutil-report-error utility as follows:
-    #
-    #   dx-jobutil-report-error "My error message"
-    #
-    # Note however that this entire bash script is executed with -e
-    # when running in the cloud, so any line which returns a nonzero
-    # exit code will prematurely exit the script; if no error was
-    # reported in the job_error.json file, then the failure reason
-    # will be AppInternalError with a generic error message.
+    # Create variable for output filename by removing .bam extension
+    bam_prefix="${input_bam_name%.bam}"
 
-    # The following line(s) use the dx command-line tool to upload your file
-    # outputs after you have created them on the local file system.  It assumes
-    # that you have used the output field name for the filename for each output,
-    # but you can change that behavior to suit your needs.  Run "dx upload -h"
-    # to see more options to set metadata.
+    # Download sample, reference, and svd prefix files
 
-    estimation=$(dx upload estimation --brief)
-    selfSM=$(dx upload selfSM --brief)
-    ancestry=$(dx upload ancestry --brief)
+    dx-download-all-inputs --parallel
 
-    # The following line(s) use the utility dx-jobutil-add-output to format and
-    # add output variables to your job's output as appropriate for the output
-    # class.  Run "dx-jobutil-add-output -h" for more information on what it
-    # does.
+    # Create output directories
+    mkdir -p /home/dnanexus/out/selfSM
+    mkdir -p /home/dnanexus/out/ancestry
 
-    dx-jobutil-add-output estimation "$estimation" --class=file
-    dx-jobutil-add-output selfSM "$selfSM" --class=file
-    dx-jobutil-add-output ancestry "$ancestry" --class=file
-}
+    # Location of verifyBamID2 Dockerfile
+    docker_file_id=
+
+    #read the DNA Nexus api key as a variable
+    API_KEY_wquotes=$(echo $DX_SECURITY_CONTEXT |  jq '.auth_token')
+    API_KEY=$(echo "$API_KEY_wquotes" | sed 's/"//g')
+    echo "$API_KEY"
+
+    # Get Docker image from 001_Tools
+    dx download $docker_file_id --auth "${API_KEY}"
+    docker_file=$(dx describe ${docker_file_id} --name)
+    DOCKERIMAGENAME=`tar xfO ${docker_file} manifest.json | sed -E 's/.*"RepoTags":\["?([^"]*)"?.*/\1/'`
+    docker load < /home/dnanexus/"${docker_file}"
+
+
+    # Run verifyBamID2 using Docker
+
+    docker run -v /home/dnanexus:/home/dnanexus/ \
+        --rm \
+        $DOCKERIMAGENAME \
+        VerifyBamID2 \
+        --SVDPrefix /home/dnanexus/in/svd_prefix/"$svd_prefix_name" \
+        --Reference /home/dnanexus/in/reference_fasta/"$reference_fasta_name" \
+        --BamFile /home/dnanexus/in/input_bam/"$input_bam_name" \
+        --Output /home/dnanexus/out/"$bam_prefix" \
+        --Verbose
+
+    # Move output files to output directories
+    mv "$bam_prefix".selfSM /home/dnanexus/out/selfSM
+    mv "$bam_prefix".Ancestry /home/dnanexus/out/ancestry
+
+    # Upload output files to DNAnexus
+    dx-upload-all-outputs
+
+fi
