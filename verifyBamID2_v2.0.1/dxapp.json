@@ -1,37 +1,42 @@
 {
-  "name": "verifyBamID2_v2.0.1",
+  "name": "verifybamid2_v2.0.1",
   "title": "verifyBamID2_v2.0.1",
   "summary": "v2.0.1: Detects and estimates inter-sample contamination in an NGS run using pooled allele frequencies",
   "dxapi": "1.0.0",
   "version": "0.0.1",
-  "bundledDepends": [
-  {
-    "name": "verifybamid2.tar.gz",
-    "id": "file-J251xyj0Jy1VvP3QZ00jjZ3y"
-  }
-],
   "inputSpec": [
     {
       "name": "reference_fasta",
       "label": "BAM reference genome",
       "class": "file",
       "optional": false,
-      "suggestions": [
+      "default":
         {
           "name": "hs37d5.fa.gz",
-          "value": {
-            "$dnanexus_link": {
-              "project": "project-ByfFPz00jy1fk6PjpZ95F27J",
-              "id": "file-B6ZY7VG2J35Vfvpkj8y0KZ01"
+          "$dnanexus_link": {
+            "project": "project-ByfFPz00jy1fk6PjpZ95F27J",
+            "id": "file-B6ZY7VG2J35Vfvpkj8y0KZ01"
             }
-          },
-          "region": "aws:us-east-1"
-        }
-      ],
+        },
       "patterns": [
         "*.fa", "*.fa.gz"
       ],
       "help": "The reference genome in FASTA format that was used to align the reads in the BAM file."
+    },
+    {
+      "name": "reference_fasta_index",
+      "label": "Reference genome index files",
+      "class": "file",
+      "optional": false,
+      "default": 
+      {
+        "name": "hs37d5.fasta-index.tar.gz",
+        "$dnanexus_link": {
+          "project": "project-ByfFPz00jy1fk6PjpZ95F27J",
+          "id": "file-ByYgX700b80gf4ZY1GxvF3Jv"
+        } 
+      },
+      "help": "Tar.gz archive containing index files (e.g. .fai) for the reference FASTA"
     },
     {
       "name": "input_bam",
@@ -56,9 +61,9 @@
     {
       "name": "svd_prefix",
       "label": "SVD prefix file",
-      "class": "file",
-      "optional": true,
-      "default": {"$dnanexus_link": "project-xxxx:file-yyyy"},
+      "class": "string",
+      "optional": false,
+      "default": "1000g.phase3.100k.b37.vcf.gz.dat",
       "help": "Resource file containing population reference data "
     },
     {
