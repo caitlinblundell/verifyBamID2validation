@@ -49,14 +49,8 @@ if [ "$skip" != "true" ]; then
     tar -xzvf /home/dnanexus/in/reference_fasta_index/"$reference_fasta_index_name" \
         -C /home/dnanexus/in/reference_fasta_index_extracted
 
-    # Move files into the same directory as the reference FASTA
+    # Move index files into the same directory as the reference FASTA
     mv /home/dnanexus/in/reference_fasta_index_extracted/* /home/dnanexus/in/reference_fasta/
-    
-
-    # Create output directories
-    mkdir -p /home/dnanexus/out/selfSM
-    mkdir -p /home/dnanexus/out/ancestry
-
     
    ## Unpack the saved Docker image tarball into a .tar file
     gunzip -c /home/dnanexus/verifybamid2.tar.gz > /home/dnanexus/verifybamid2.tar
@@ -71,6 +65,10 @@ if [ "$skip" != "true" ]; then
     # Remove the .tar to save space
     rm /home/dnanexus/verifybamid2.tar
 
+    # Create output directories
+    mkdir -p /home/dnanexus/out/selfSM/output_selfSM/
+    mkdir -p /home/dnanexus/out/ancestry/output_ancestry/
+    mkdir -p /home/dnanexus/out/"$bam_prefix"
 
     # Run verifyBamID2
 
@@ -83,9 +81,11 @@ if [ "$skip" != "true" ]; then
         --Output /home/dnanexus/out/"$bam_prefix" \
         --Verbose
 
+
     # Move output files to output directories
-    mv /home/dnanexus/out/"$bam_prefix".selfSM /home/dnanexus/out/selfSM
-    mv /home/dnanexus/out/"$bam_prefix".Ancestry /home/dnanexus/out/ancestry
+    mv /home/dnanexus/out/"$bam_prefix".selfSM /home/dnanexus/out/selfSM/output_selfSM/
+    mv /home/dnanexus/out/"$bam_prefix".Ancestry /home/dnanexus/out/ancestry/output_ancestry/
+
 
     # Upload output files to DNAnexus
     dx-upload-all-outputs
