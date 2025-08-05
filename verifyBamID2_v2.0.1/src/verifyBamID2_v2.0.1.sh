@@ -3,7 +3,7 @@
 
 # The following line causes bash to exit at any point if there is any error
 # and to output each line as it is executed -- useful for debugging
-set -e -x -o pipefail
+set -e -o pipefail
 
 
 # If skip is not set to true, then proceed
