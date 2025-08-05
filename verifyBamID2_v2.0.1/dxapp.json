@@ -7,16 +7,11 @@
   "inputSpec": [
     {
       "name": "reference_fasta",
-      "label": "BAM reference genome",
+      "label": "Reference genome",
       "class": "file",
       "optional": false,
-      "default":
-        {
-          "name": "hs37d5.fa.gz",
-          "$dnanexus_link": {
-            "project": "project-ByfFPz00jy1fk6PjpZ95F27J",
-            "id": "file-B6ZY7VG2J35Vfvpkj8y0KZ01"
-            }
+      "default":{
+        "$dnanexus_link": "file-B6ZY7VG2J35Vfvpkj8y0KZ01"
         },
       "patterns": [
         "*.fa", "*.fa.gz"
@@ -30,11 +25,8 @@
       "optional": false,
       "default": 
       {
-        "name": "hs37d5.fasta-index.tar.gz",
-        "$dnanexus_link": {
-          "project": "project-ByfFPz00jy1fk6PjpZ95F27J",
-          "id": "file-ByYgX700b80gf4ZY1GxvF3Jv"
-        } 
+        "$dnanexus_link":
+          "file-ByYgX700b80gf4ZY1GxvF3Jv"
       },
       "help": "Tar.gz archive containing index files (e.g. .fai) for the reference FASTA"
     },
