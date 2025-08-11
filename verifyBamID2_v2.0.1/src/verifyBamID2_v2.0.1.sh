@@ -81,7 +81,7 @@ if [ "$skip" != "true" ]; then
     # Decompress reference fasta if it is gzipped
     if [[ "$reference_fasta_index_name" == *.gz ]] 
         then 
-            gunzip -c /home/dnanexus/in/reference_fasta/"$reference_fasta_index_name" > /home/dnanexus/in/reference_fasta/"${reference_fasta_index_name%.gz}"
+            gunzip -c /home/dnanexus/in/reference_fasta_index/"$reference_fasta_index_name" > /home/dnanexus/in/reference_fasta_index/"${reference_fasta_index_name%.gz}"
             reference_fasta_index_name="${reference_fasta_index_name%.gz}"
             echo "Reference index decompressed"
     fi
