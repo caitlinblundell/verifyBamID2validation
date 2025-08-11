@@ -51,12 +51,20 @@
       "help": "The index file corresponding to the input BAM file."
     },
     {
-      "name": "svd_prefix",
-      "label": "SVD prefix file",
-      "class": "string",
+      "name": "svd_array",
+      "label": "SVD files (.bed, .mu, .UD, .V)",
+      "class": "array:file",
       "optional": false,
-      "default": "1000g.phase3.100k.b37.vcf.gz.dat",
-      "help": "Resource file containing population reference data "
+      "default": [
+        { "$dnanexus_link": "file-J253z1j0Jy1xP94Fv2Z65f8Y" },
+        { "$dnanexus_link": "file-J253z1j0Jy1jfjXYQ1z2f532" },
+        { "$dnanexus_link": "file-J253z1j0Jy1xP94Fv2Z65f8b" },
+        { "$dnanexus_link": "file-J253z1j0Jy1v64kXfy2z3Gp7" }
+      ],
+      "patterns": [
+        "*.bed", "*.mu", "*.UD", "*.V"
+      ],
+      "help": "Resource files containing population reference data "
     },
     {
       "name": "skip",
