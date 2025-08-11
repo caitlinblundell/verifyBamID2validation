@@ -18,9 +18,9 @@ if [ "$skip" != "true" ]; then
     error-signpost "downloading and checking input variables"
 
     # Log input variables     
-    echo "Value of reference_fasta: $reference_fasta"
-    echo "Value of input_bam: $input_bam"
-    echo "Value of input_bam_index: $input_bam_index"
+    echo "Name of reference_fasta: $reference_fasta_name"
+    echo "Name of input_bam: $input_bam_name"
+    echo "Name of input_bam_index: $input_bam_index_name"
 
     # Get input filenames as strings
     reference_fasta_name=$(dx describe --name "$reference_fasta")
@@ -71,11 +71,19 @@ if [ "$skip" != "true" ]; then
     fi
 
     # Check reference fasta index files 
-    if  [[ "$reference_fasta_index_name" != *.tar.gz ]] # error if reference index is not a tarball
+    if  [[ "$reference_fasta_index_name" != *.tar* ]] # error if reference index is not a tarball
 	    then
             echo "Received file: $reference_fasta_index_name"
 		    echo "Invalid format: reference fasta .fai and .gzi should be packaged in a tarball"
 		    exit 1
+    fi
+
+    # Decompress reference fasta if it is gzipped
+    if [[ "$reference_fasta_index_name" == *.gz ]] 
+        then 
+            gunzip -c /home/dnanexus/in/reference_fasta/"$reference_fasta_index_name" > /home/dnanexus/in/reference_fasta/"${reference_fasta_index_name%.gz}"
+            reference_fasta_index_name="${reference_fasta_index_name%.gz}"
+            echo "Reference index decompressed"
     fi
 
     # Unpack fasta-index files
