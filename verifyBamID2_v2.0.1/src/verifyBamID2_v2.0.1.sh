@@ -15,25 +15,22 @@ error-signpost() {
 if [ "$skip" != "true" ]; then
 
 
-    error-signpost "downloading and checking input variables"
+    error-signpost "downloading input variables"
+    # Download sample, reference, and svd files
+    dx-download-all-inputs --parallel
 
     # Log input variables     
     echo "Name of reference_fasta: $reference_fasta_name"
     echo "Name of input_bam: $input_bam_name"
     echo "Name of input_bam_index: $input_bam_index_name"
 
-    # Get input filenames as strings
-    reference_fasta_name=$(dx describe --name "$reference_fasta")
-    reference_fasta_index_name=$(dx describe --name "$reference_fasta_index")
-    input_bam_name=$(dx describe --name "$input_bam")
-    input_bam_index_name=$(dx describe --name "$input_bam_index")
+    # Copy bai into the input_bam directory to make it accessible to verifyBamID2
+    cp /home/dnanexus/in/input_bam_index/"$input_bam_index_name" /home/dnanexus/in/input_bam/"${input_bam_name}.bai"
 
-    # Download sample, reference, and svd files
-    dx-download-all-inputs --parallel
 
+    error-signpost "validating svd files"
     # Get SVD prefix from first file in array
     svd_prefix="${svd_array_prefix[0]}" # helper bash variable _prefix removes suffixes defined in dxapp.json
-
 
     # Move all SVD files into a single directory as VBID2 expects
     mkdir -p /home/dnanexus/in/collated_SVD_files
@@ -52,10 +49,8 @@ if [ "$skip" != "true" ]; then
         exit 1
     fi
 
-    # Copy bai into the input_bam directory to make it accessible to verifyBamID2
-    cp /home/dnanexus/in/input_bam_index/"$input_bam_index_name" /home/dnanexus/in/input_bam/"${input_bam_name}.bai"
 
-    error-signpost "validating reference genome format"
+    error-signpost "validating reference genome"
     if  [[ "$reference_fasta_name" == *.tar* ]] # error if reference is a tarball
 	    then
             echo "Received file: $reference_fasta_name"
@@ -70,32 +65,33 @@ if [ "$skip" != "true" ]; then
             echo "Reference genome decompressed"
     fi
 
-    # Check reference fasta index files 
-    if  [[ "$reference_fasta_index_name" != *.tar* ]] # error if reference index is not a tarball
-	    then
-            echo "Received file: $reference_fasta_index_name"
-		    echo "Invalid format: reference fasta .fai and .gzi should be packaged in a tarball"
-		    exit 1
+    # Check and extract reference fasta index:
+    # Check reference index file tarball (.tar or .tar.gz)
+    if [[ "$reference_fasta_index_name" != *.tar* ]]; then
+        echo "Received file: $reference_fasta_index_name"
+        echo "Invalid format: reference fasta .fai and .gzi should be packaged in a tarball"
+        exit 1
     fi
 
-    # Decompress reference fasta if it is gzipped
-    if [[ "$reference_fasta_index_name" == *.gz ]] 
-        then 
-            gunzip -c /home/dnanexus/in/reference_fasta_index/"$reference_fasta_index_name" > /home/dnanexus/in/reference_fasta_index/"${reference_fasta_index_name%.gz}"
-            reference_fasta_index_name="${reference_fasta_index_name%.gz}"
-            echo "Reference index decompressed"
+    # If gzipped, decompress first
+    if [[ "$reference_fasta_index_name" == *.gz ]]; then
+        echo "Reference index is gzipped, decompressing..."
+        gunzip -c "/home/dnanexus/in/reference_fasta_index/$reference_fasta_index_name" \
+            > "/home/dnanexus/in/reference_fasta_index/${reference_fasta_index_name%.gz}"
+        reference_fasta_index_name="${reference_fasta_index_name%.gz}"
+        echo "Reference index decompressed to $reference_fasta_index_name"
     fi
 
-    # Unpack fasta-index files
+    # Extract reference index tarball
     mkdir -p /home/dnanexus/in/reference_fasta_index_extracted
-    tar -xzvf /home/dnanexus/in/reference_fasta_index/"$reference_fasta_index_name" \
+    tar -xvf "/home/dnanexus/in/reference_fasta_index/$reference_fasta_index_name" \
         -C /home/dnanexus/in/reference_fasta_index_extracted
 
     # Move index files into the same directory as the reference FASTA
     mv /home/dnanexus/in/reference_fasta_index_extracted/* /home/dnanexus/in/reference_fasta/
 
+
     error-signpost "preparing Docker image"
-    
    ## Unpack the saved Docker image tarball into a .tar file
     gunzip -c /home/dnanexus/verifybamid2.tar.gz > /home/dnanexus/verifybamid2.tar
 
@@ -113,21 +109,23 @@ if [ "$skip" != "true" ]; then
     bam_prefix="${input_bam_name%.bam}"
 
     # Create output directories
-    mkdir -p /home/dnanexus/out/selfSM/output_selfSM/
-    mkdir -p /home/dnanexus/out/ancestry/output_ancestry/
+    mkdir -p /home/dnanexus/out/all_outputs/vbid_output
     mkdir -p /home/dnanexus/out/"$bam_prefix"
+
 
     error-signpost "running verifyBamID2"
     # Run verifyBamID2
-
     docker run -v /home/dnanexus:/home/dnanexus/ \
         --rm \
         "$DOCKERIMAGENAME" \
         --SVDPrefix /home/dnanexus/in/collated_SVD_files/"$svd_prefix" \
         --Reference /home/dnanexus/in/reference_fasta/"$reference_fasta_name" \
         --BamFile /home/dnanexus/in/input_bam/"$input_bam_name" \
-        --Output /home/dnanexus/out/"$bam_prefix"
+        --Output /home/dnanexus/out/"$bam_prefix" \
+        $additional_flags
 
+
+    error-signpost "uploading output files"
     # Check if output files exist before attempting move; warn if they are missing
     if [[ ! -f "/home/dnanexus/out/${bam_prefix}.selfSM" ]] || [[ ! -f "/home/dnanexus/out/${bam_prefix}.Ancestry" ]]; then
         echo "WARNING: One or both output files (.selfSM, .Ancestry) are missing."
@@ -135,9 +133,8 @@ if [ "$skip" != "true" ]; then
     fi
 
     # Move output files to output directories
-    mv /home/dnanexus/out/"$bam_prefix".selfSM /home/dnanexus/out/selfSM/output_selfSM/
-    mv /home/dnanexus/out/"$bam_prefix".Ancestry /home/dnanexus/out/ancestry/output_ancestry/
-
+    mv /home/dnanexus/out/"$bam_prefix".selfSM /home/dnanexus/out/all_outputs/vbid_output/
+    mv /home/dnanexus/out/"$bam_prefix".Ancestry /home/dnanexus/out/all_outputs/vbid_output/
 
     # Upload output files to DNAnexus
     dx-upload-all-outputs

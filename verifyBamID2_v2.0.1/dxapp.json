@@ -46,7 +46,7 @@
       "class": "file",
       "optional": false,
       "patterns": [
-        "*.bai"
+        "*.bai", ".bam.bai"
       ],
       "help": "The index file corresponding to the input BAM file."
     },
@@ -67,6 +67,15 @@
       "help": "Resource files containing population reference data "
     },
     {
+      "name": "additional_flags",
+      "label": "Additional verifyBamID2 flags",
+      "class": "string",
+      "optional": true,
+      "default": "",
+      "help": "Additional flags to pass to verifyBamID2 if required"
+
+    },
+    {
       "name": "skip",
       "label": "skip",
       "help": "Skip this step if not required",
@@ -77,20 +86,13 @@
   ],
   "outputSpec": [
     {
-      "name": "selfSM",
-      "class": "file",
+      "name": "all_outputs",
+      "label": "All outputs",
+      "class": "array:file",
       "patterns": [
-        "*.selfSM"
+        "*.selfSM", "*.Ancestry"
       ],
-      "help": "Output containing contamination estimates for the sample in the BAM file."
-    },
-    {
-      "name": "ancestry",
-      "class": "file",
-      "patterns": [
-        "*.Ancestry"
-      ],
-      "help": "PC co-ordinates of the contaminating and intended samples in the BAM file."
+      "help": ".selfSM: Output containing contamination estimates for the sample in the BAM file. .Ancestry: PC co-ordinates of the contaminating and intended samples in the BAM file."
     }
   ],
   "runSpec": {

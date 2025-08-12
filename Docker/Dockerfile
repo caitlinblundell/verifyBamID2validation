@@ -33,7 +33,7 @@ RUN autoreconf -i && ./configure --prefix=/usr/local/ && make && make install
 # Clone and compile VerifyBamID2 v2.0.1
 WORKDIR /
 RUN git clone --depth 1 --branch 2.0.1 https://github.com/Griffan/VerifyBamID.git
-
+s
 WORKDIR /VerifyBamID/build
 RUN cmake .. && make && make test
 
