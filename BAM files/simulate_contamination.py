@@ -56,48 +56,54 @@ def simulate_contamination(base_bam, contam_bam,
     # Prepare truth table file
     with open(truth_csv, "w", newline="") as csvfile:
         writer = csv.writer(csvfile)
-        writer.writerow(["alpha", "n_base", "n_contam", "out_bam"])  # header row
+        writer.writerow(["alpha", "n_base_reads", "n_contam_reads", "base_level_fraction", "read_level_fraction", "out_bam"])  # header row
 
         for alpha in alphas:
             base.reset() # move pointer back to start of BAM for re-iteration (avoids reopening file)
             contam.reset()
 
-            # Calculate number of reads to sample from each BAM
-            n_base = int((1 - alpha) * base_readcount)
-            n_contam = int((B1 / B2) * alpha * base_readcount)
-            n_contam = min(n_contam, contam_readcount)
+            # Probability of selecting individual reads from each BAM
+            p_base = 1 - alpha
+            p_contam = alpha * (B1 / B2)
 
-            print(f"[α={alpha}] Sampling {n_base} base reads + {n_contam} contaminant reads")
-
-            # Randomly choose read indices
-            base_indices = set(random.sample(range(base_readcount), n_base)) # random.sample returns a list of [n_base] unique read indices, then converted to set for faster lookup
-            contam_indices = set(random.sample(range(contam_readcount), n_contam))
+            # Count of how many reads/bases from each BAM have been selected
+            n_base_selected = 0
+            n_contam_selected = 0
+            total_base_bases = 0
+            total_contam_bases = 0
 
             # Output BAM file
             out_bam = f"{out_prefix}_alpha{alpha:.2f}.bam"
             with pysam.AlignmentFile(out_bam, "wb", header=base.header) as out: # wb = write binary. imports header from base BAM
-                # Write selected base reads
-                for i, read in enumerate(base.fetch(until_eof=True)):
-                    if i in base_indices:
+                # Sample base reads probabilistically
+                for read in base.fetch(until_eof=True):
+                    if random.random() < p_base:
                         out.write(read)
+                        n_base_selected += 1
+                        total_base_bases += read.reference_length
 
-                # Write selected contaminant reads
-                for i, read in enumerate(contam.fetch(until_eof=True)):
-                    if i in contam_indices:
-                        if tag_contam: # see function args
-                            read.query_name = read.query_name + ":CONTAM" # append ":CONTAM" to the read name for contaminant reads to enable easy identification/checking later
+                # Sample contaminant reads probabilistically
+                for read in contam.fetch(until_eof=True):
+                    if random.random() < p_contam:
+                        if tag_contam:
+                            read.query_name = read.query_name + ":CONTAM"
                         out.write(read)
+                        n_contam_selected += 1
+                        total_contam_bases += read.reference_length
 
-            # Sort and index BAM
+            # Calculate contamination fractions
+            base_level_fraction = total_contam_bases / (total_base_bases + total_contam_bases) if (total_base_bases + total_contam_bases) > 0 else 0
+            read_level_fraction = n_contam_selected / (n_base_selected + n_contam_selected) if (n_base_selected + n_contam_selected) > 0 else 0
+
+            # Sort and index
             sorted_bam = out_bam.replace(".bam", ".sorted.bam")
             pysam.sort("-o", sorted_bam, out_bam, catch_stdout=False)
             pysam.index(sorted_bam)
-            os.remove(out_bam)  # remove unsorted temporary BAM
-            print(f"  -> wrote {sorted_bam}")
+            os.remove(out_bam)
 
+            print(f"[α={alpha}] Selected {n_base_selected} base reads + {n_contam_selected} contaminant reads -> {sorted_bam}")
 
-            # Write truth table entry
-            writer.writerow([alpha, n_base, n_contam, sorted_bam])
+            writer.writerow([alpha, n_base_selected, n_contam_selected, round(base_level_fraction,5), round(read_level_fraction,5), sorted_bam]) # write to truth table
 
     base.close()
     contam.close()
