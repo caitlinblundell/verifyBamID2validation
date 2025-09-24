@@ -132,9 +132,15 @@ if [ "$skip" != "true" ]; then
         echo "This can happen when too few SNP markers overlap between BAM and SVD panel."
     fi
 
+
     # Move output files to output directories
     mv /home/dnanexus/out/"$bam_prefix".selfSM /home/dnanexus/out/all_outputs/vbid_output/
     mv /home/dnanexus/out/"$bam_prefix".Ancestry /home/dnanexus/out/all_outputs/vbid_output/
+
+    # Move pileup file to output folder if it exists
+    if [[ -f "/home/dnanexus/out/${bam_prefix}.pileup" ]]; then
+        mv /home/dnanexus/out/"${bam_prefix}".pileup /home/dnanexus/out/all_outputs/vbid_output/
+    fi
 
     # Upload output files to DNAnexus
     dx-upload-all-outputs
