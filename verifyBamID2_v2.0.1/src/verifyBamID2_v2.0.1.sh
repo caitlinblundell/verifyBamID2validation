@@ -1,5 +1,5 @@
 #!/bin/bash
-# verifyBamID2_v2.0.1 0.0.2
+# verifyBamID2_v2.0.1
 
 # The following line causes bash to exit at any point if there is any error
 # and to output each line as it is executed -- useful for debugging
@@ -11,7 +11,7 @@ error-signpost() {
     echo '{"error": {"type": "AppError", "message": "Error while '"$@"'; please refer to the job log for more details."}}' > ~/job_error.json
 }
 
-# If skip is not set to true, then proceed
+# If skip is not passed in, then proceed
 if [ "$skip" != "true" ]; then
 
 
@@ -114,6 +114,8 @@ if [ "$skip" != "true" ]; then
 
 
     error-signpost "running verifyBamID2"
+    # Temporarily disable exit-on-error so that files (e.g. pileup) can be examined if VBID2 fails
+    set +e
     # Run verifyBamID2
     docker run -v /home/dnanexus:/home/dnanexus/ \
         --rm \
@@ -123,26 +125,44 @@ if [ "$skip" != "true" ]; then
         --BamFile /home/dnanexus/in/input_bam/"$input_bam_name" \
         --Output /home/dnanexus/out/"$bam_prefix" \
         $additional_flags
-
+    status=$?
+    set -e  # re-enable exit-on-error
 
     error-signpost "uploading output files"
-    # Check if output files exist before attempting move; warn if they are missing
-    if [[ ! -f "/home/dnanexus/out/${bam_prefix}.selfSM" ]] || [[ ! -f "/home/dnanexus/out/${bam_prefix}.Ancestry" ]]; then
-        echo "WARNING: One or both output files (.selfSM, .Ancestry) are missing."
+
+    echo "DEBUG: Listing verifyBamID2 output directory..."
+    ls -lh /home/dnanexus/out/ || true
+    ls -lh /home/dnanexus/out/${bam_prefix} || true
+
+    missing_outputs=()
+
+    # Handle .selfSM, .Ancestry, and .Pileup consistently
+    for ext in selfSM Ancestry Pileup; do
+        src1="/home/dnanexus/out/${bam_prefix}.${ext}"
+        src2="/home/dnanexus/out/${bam_prefix}/${bam_prefix}.${ext}"
+        if [[ -f "$src1" ]]; then
+            mv "$src1" /home/dnanexus/out/all_outputs/vbid_output/
+        elif [[ -f "$src2" ]]; then
+            mv "$src2" /home/dnanexus/out/all_outputs/vbid_output/
+        else
+            if [[ "$ext" == "selfSM" || "$ext" == "Ancestry" ]]; then
+                missing_outputs+=("${bam_prefix}.${ext}")
+                echo "DEBUG: Missing $ext output"
+            fi
+        fi
+    done
+
+    if [[ ${#missing_outputs[@]} -gt 0 ]]; then
+        echo "WARNING: One or both output files (.selfSM, .Ancestry) are missing: ${missing_outputs[*]}"
         echo "This can happen when too few SNP markers overlap between BAM and SVD panel."
     fi
 
-
-    # Move output files to output directories
-    mv /home/dnanexus/out/"$bam_prefix".selfSM /home/dnanexus/out/all_outputs/vbid_output/
-    mv /home/dnanexus/out/"$bam_prefix".Ancestry /home/dnanexus/out/all_outputs/vbid_output/
-
-    # Move pileup file to output folder if it exists
-    if [[ -f "/home/dnanexus/out/${bam_prefix}.pileup" ]]; then
-        mv /home/dnanexus/out/"${bam_prefix}".pileup /home/dnanexus/out/all_outputs/vbid_output/
-    fi
-
-    # Upload output files to DNAnexus
     dx-upload-all-outputs
+
+    if [[ $status -ne 0 ]]; then
+        echo "WARNING: verifyBamID2 failed with exit code $status. Partial outputs (if any) have been uploaded."
+    fi
+    exit $status
+
 
 fi

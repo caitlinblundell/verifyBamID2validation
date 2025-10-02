@@ -90,7 +90,7 @@
       "label": "All outputs",
       "class": "array:file",
       "patterns": [
-        "*.selfSM", "*.Ancestry", "*.pileup"
+        "*.selfSM", "*.Ancestry", "*.Pileup"
       ],
       "help": ".selfSM: Output containing contamination estimates for the sample in the BAM file. .Ancestry: PC co-ordinates of the contaminating and intended samples in the BAM file."
     }
@@ -106,7 +106,7 @@
     "network": [
       "*"
     ],
-    "allProjects": "VIEW"
+    "allProjects": "UPLOAD"
   },
   "regionalOptions": {
     "aws:us-east-1": {
