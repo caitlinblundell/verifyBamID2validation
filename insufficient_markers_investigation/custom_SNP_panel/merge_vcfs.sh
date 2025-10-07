@@ -26,5 +26,5 @@ for vcf in $VCF_DIR/ALL.chr*.vcf.gz; do
 done
 
 # Merge all subset VCFs into a single VCF for filtering with bcftools
-bcftools concat -Oz -o merged_1kgp_panel.vcf $SUBSET_VCF_DIR/*.subset.vcf.gz
+bcftools concat -Oz -o merged_1kgp_panel.vcf.gz $SUBSET_VCF_DIR/*.subset.vcf.gz
 bcftools index merged_1kgp_panel.vcf.gz
