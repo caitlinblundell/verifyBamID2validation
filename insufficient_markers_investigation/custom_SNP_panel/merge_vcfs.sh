@@ -10,7 +10,7 @@ SUBSET_VCF_DIR="VCF_subset"
 mkdir -p $SUBSET_VCF_DIR
 
 # Log file
-LOG_FILE="variant_counts_per_chr.txt"
+VARIANT_LOG_FILE="variant_counts_per_chr.txt"
 echo "Chromosome   NumVariants" > $VARIANT_LOG_FILE
 
 # Subset each with CP2 .bed and then compress/index
