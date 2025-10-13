@@ -1,10 +1,10 @@
 #!/bin/bash
 set -e
 
-# This script merges all 1KGP individual chr VCF files into a single VCF file using bcftools.
+# This script merges all 1KGP individual chr VCF files, after subsetting with a bed file, into a single VCF file using bcftools.
 
 VCF_DIR="1kgp_phase3_vcfs"
-PANEL_BED="Pan5272_data.bed"
+PANEL_BED="CP2_panel/Pan5272_data.bed"
 SUBSET_VCF_DIR="VCF_subset"
 
 mkdir -p $SUBSET_VCF_DIR
@@ -26,5 +26,6 @@ for vcf in $VCF_DIR/ALL.chr*.vcf.gz; do
 done
 
 # Merge all subset VCFs into a single VCF for filtering with bcftools
-bcftools concat -Oz -o merged_1kgp_panel.vcf.gz $SUBSET_VCF_DIR/*.subset.vcf.gz
-bcftools index merged_1kgp_panel.vcf.gz
+mkdir -p 1KGP_CP2_intersect
+bcftools concat -Oz -o 1KGP_CP2_intersect/merged_1kgp_panel.vcf.gz $SUBSET_VCF_DIR/*.subset.vcf.gz
+bcftools index 1KGP_CP2_intersect/merged_1kgp_panel.vcf.gz
