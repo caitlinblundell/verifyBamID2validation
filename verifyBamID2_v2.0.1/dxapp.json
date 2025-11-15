@@ -56,10 +56,10 @@
       "class": "array:file",
       "optional": false,
       "default": [
-        { "$dnanexus_link": "file-J253z1j0Jy1xP94Fv2Z65f8Y" },
-        { "$dnanexus_link": "file-J253z1j0Jy1jfjXYQ1z2f532" },
-        { "$dnanexus_link": "file-J253z1j0Jy1xP94Fv2Z65f8b" },
-        { "$dnanexus_link": "file-J253z1j0Jy1v64kXfy2z3Gp7" }
+        { "$dnanexus_link": "file-J3g4b4Q0Jy1kP8zj5VGbXkyg" },
+        { "$dnanexus_link": "file-J3g4b4Q0Jy1Y3qkQY2571gVX" },
+        { "$dnanexus_link": "file-J3g4b4Q0Jy1x2V3qx6956520" },
+        { "$dnanexus_link": "file-J3g4b4Q0Jy1XjZ7Fg9G1bqgb" }
       ],
       "patterns": [
         "*.bed", "*.mu", "*.UD", "*.V"
