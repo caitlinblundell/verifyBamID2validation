@@ -41,7 +41,7 @@ EOF
 
     # Downsample to target aligned reads:
     echo "Downsampling to $TARGET_ALIGNED_READS aligned reads"
-    samtools view -s "$DOWNSAMPLE_FRAC" -b "$filtered" -o "$downsampled"
+    samtools view -s "42.$DOWNSAMPLE_FRAC" -b "$filtered" -o "$downsampled" #random seed 42
 
     # Sort + index
     echo "Sorting"
