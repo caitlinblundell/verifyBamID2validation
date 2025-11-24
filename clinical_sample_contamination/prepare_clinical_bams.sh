@@ -33,7 +33,9 @@ for bam in "$@"; do  # Iterate over all input BAM files
         DOWNSAMPLE_FRAC=1.0
     else
         DOWNSAMPLE_FRAC=$(python3 - <<EOF
-print($TARGET_ALIGNED_READS / $MAPPED_READS)
+frac = $TARGET_ALIGNED_READS / $MAPPED_READS
+# remove leading "0." for samtools view -s option
+print(str(frac).split(".")[1])
 EOF
 )
         echo "   Downsampling fraction: $DOWNSAMPLE_FRAC"
