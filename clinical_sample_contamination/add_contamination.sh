@@ -18,12 +18,15 @@ for ALPHA in "${ALPHAS[@]}"; do
     # Fractions for subsampling from the base BAM
     BASE_FRAC=$(python3 - <<EOF
 alpha=float("$ALPHA")
-print(1 - alpha)
+frac = 1 - alpha
+print(str(frac).split('.')[1])   # remove the leading "0."
 EOF
 )
     # Fractions for subsampling from the contaminant BAM
-    CONTAM_FRAC="$ALPHA"
-
+    CONTAM_FRAC=$(python3 - <<EOF
+print("$ALPHA".split('.')[1])
+EOF
+)
     # Define output filenames
     CONTAM_LEVEL=$(printf "%03d" $(echo "$ALPHA*100" | bc))   # converts decimal to integer e.g. 0.03 → 003
     BASE_SUB="${PREFIX}.${CONTAM_LEVEL}.base.sub.bam"         # subsampled base BAM
