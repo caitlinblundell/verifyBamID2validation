@@ -28,7 +28,7 @@ print("$ALPHA".split('.')[1])
 EOF
 )
     # Define output filenames
-    CONTAM_LEVEL=$(printf "%03d" $(echo "$ALPHA*100" | bc))   # converts decimal to integer e.g. 0.03 → 003
+    CONTAM_LEVEL=$(printf "%03d" "${ALPHA##0.}")   # converts decimal to integer e.g. 0.03 → 003
     BASE_SUB="${PREFIX}.${CONTAM_LEVEL}.base.sub.bam"         # subsampled base BAM
     CONTAM_SUB="${PREFIX}.${CONTAM_LEVEL}.contam.sub.bam"     # subsampled contaminant BAM
     MERGED_RAW="${PREFIX}.${CONTAM_LEVEL}.raw.bam"            # merged unsorted BAM
