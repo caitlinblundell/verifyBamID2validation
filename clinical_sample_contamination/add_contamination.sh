@@ -58,7 +58,7 @@ EOF
     echo "   Found platform: $PLATFORM"
 
     echo "Replacing read groups"
-    java -jar picard.jar AddOrReplaceReadGroups \
+    picard AddOrReplaceReadGroups \
         I="$MERGED_SORTED" \
         O="$FINAL" \
         RGID="SIM" \
