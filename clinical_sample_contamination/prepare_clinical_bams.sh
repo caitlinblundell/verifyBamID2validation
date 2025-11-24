@@ -38,7 +38,7 @@ frac = $TARGET_ALIGNED_READS / $MAPPED_READS
 print(str(frac).split(".")[1])
 EOF
 )
-        echo "   Downsampling fraction: $DOWNSAMPLE_FRAC"
+        echo "   Downsampling fraction: 0.$DOWNSAMPLE_FRAC"
     fi
 
     # Downsample to target aligned reads:
