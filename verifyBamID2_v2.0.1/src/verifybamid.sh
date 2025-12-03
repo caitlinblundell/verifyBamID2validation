@@ -6,8 +6,8 @@
 set -e -o pipefail
 
 
-# define error-signpost error handler that will log error to DNAnexus job log
-error-signpost() {
+# define log-step error handler that will log error to DNAnexus job log
+log-step() {
     echo '{"error": {"type": "AppError", "message": "Error while '"$@"'; please refer to the job log for more details."}}' > ~/job_error.json
 }
 
@@ -15,7 +15,7 @@ error-signpost() {
 if [ "$skip" != "true" ]; then
 
 
-    error-signpost "downloading input variables"
+    log-step "downloading input variables"
     # Download sample, reference, and svd files
     dx-download-all-inputs --parallel
 
@@ -28,7 +28,7 @@ if [ "$skip" != "true" ]; then
     cp /home/dnanexus/in/input_bam_index/"$input_bam_index_name" /home/dnanexus/in/input_bam/"${input_bam_name}.bai"
 
 
-    error-signpost "validating svd files"
+    log-step "validating svd files"
     # Get SVD prefix from first file in array
     svd_prefix="${svd_array_prefix[0]}" # helper bash variable _prefix removes suffixes defined in dxapp.json
 
@@ -50,7 +50,7 @@ if [ "$skip" != "true" ]; then
     fi
 
 
-    error-signpost "validating reference genome"
+    log-step "validating reference genome"
     if  [[ "$reference_fasta_name" == *.tar* ]] # error if reference is a tarball
 	    then
             echo "Received file: $reference_fasta_name"
@@ -91,7 +91,7 @@ if [ "$skip" != "true" ]; then
     mv /home/dnanexus/in/reference_fasta_index_extracted/* /home/dnanexus/in/reference_fasta/
 
 
-    error-signpost "preparing Docker image"
+    log-step "preparing Docker image"
    ## Unpack the saved Docker image tarball into a .tar file
     gunzip -c /home/dnanexus/verifybamid2.tar.gz > /home/dnanexus/verifybamid2.tar
 
@@ -113,7 +113,7 @@ if [ "$skip" != "true" ]; then
     mkdir -p /home/dnanexus/out/"$bam_prefix"
 
 
-    error-signpost "running verifyBamID2"
+    log-step "running verifyBamID2"
     # Temporarily disable exit-on-error so that files (e.g. pileup) can be examined if VBID2 fails
     set +e
     # Run verifyBamID2
@@ -128,11 +128,7 @@ if [ "$skip" != "true" ]; then
     status=$?
     set -e  # re-enable exit-on-error
 
-    error-signpost "uploading output files"
-
-    echo "DEBUG: Listing verifyBamID2 output directory..."
-    ls -lh /home/dnanexus/out/ || true
-    ls -lh /home/dnanexus/out/${bam_prefix} || true
+    log-step "uploading output files"
 
     missing_outputs=()
 
