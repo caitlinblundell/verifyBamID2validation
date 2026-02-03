@@ -6,7 +6,7 @@ SOURCE_PROJECT=$1
 VALIDATION_PROJECT=project-J0yfQ400Jy1pJP08gFkGq6q7
 
 # Count number of BAM files in source project
-BAM_FILES=$(dx find data --project $SOURCE_PROJECT:/output/ --name "*.bam" --norecurse --brief)
+BAM_FILES=$(dx find data --path $SOURCE_PROJECT:/output/ --name "*.bam" --norecurse --brief)
 echo "Number of BAM files found: $(echo "$BAM_FILES" | wc -l)"
 
 # Move into validation project
@@ -18,7 +18,7 @@ dx generate_batch_inputs \
 --path $SOURCE_PROJECT:/output/ \
 -o $BATCH_FILE \
 -i input_bam="*.bam" \
--i input_bam_index="*.bam.bai" \
+-i input_bam_index="*.bam.bai"
 
 # Run verifyBAMID applet on each BAM file in validation project as batch run
 dx run project-ByfFPz00jy1fk6PjpZ95F27J:applet-J5KPy2Q0Jy1YFBxGZJbxpjPY \
