@@ -20,7 +20,7 @@ OUTPUT_FILE="${RUN_ID}_verifyBamID_results_summary.tsv"
 echo -e "Sample_name\tFREEMIX" > "$OUTPUT_FILE"
 
 # Get list of selfSM file ids in the output folder
-dx find data --path $VALIDATION_PROJECT:$INPUT_FOLDER_PATH --name "*.selfSM" --brief | \
+dx find data --path $VALIDATION_PROJECT:$INPUT_FOLDER_PATH --name "*.selfSM" --brief --no-recurse| \
 # Loop through each file id
 while read -r file_id; do
     # then stream file content to stdout using cat
