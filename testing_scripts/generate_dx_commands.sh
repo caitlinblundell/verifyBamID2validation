@@ -13,15 +13,13 @@ echo "Number of BAM files found: $(echo "$BAM_FILES" | wc -l)"
 dx select $VALIDATION_PROJECT
 
 # Generate batch TSV
-BATCH_FILE="verifyBAMID_batch.tsv"
 dx generate_batch_inputs \
 --path $SOURCE_PROJECT:/output/ \
--o $BATCH_FILE \
--i input_bam="*.bam" \
--i input_bam_index="*.bam.bai"
+-i input_bam="(.*)\.bam$" \
+-i input_bam_index="(.*)\.bam\.bai$"
 
 # Run verifyBAMID applet on each BAM file in validation project as batch run
 dx run project-ByfFPz00jy1fk6PjpZ95F27J:applet-J5KPy2Q0Jy1YFBxGZJbxpjPY \
 --name "verifyBAMID_batchrun" \
 --destination $VALIDATION_PROJECT:/cp2_samples/ \
---batch-tsv $BATCH_FILE
+--batch-tsv "dx_batch.0000.tsv"
