@@ -12,7 +12,7 @@ OUTPUT_DIR="/cp2_samples/results_summary/"
 dx mkdir -p $OUTPUT_DIR
 
 # Take run id from first sample in output folder
-FIRST_SAMPLE_NAME=$(dx ls $INPUT_FOLDER_PATH | head -n 1)
+FIRST_SAMPLE_NAME=$(dx ls "$INPUT_FOLDER_PATH" | sed -n '1p')
 RUN_ID="${FIRST_SAMPLE_NAME%%_*}"
 
 # Create output file
@@ -20,7 +20,7 @@ OUTPUT_FILE="${RUN_ID}_verifyBamID_results_summary.tsv"
 echo -e "Sample_name\tFREEMIX" > "$OUTPUT_FILE"
 
 # Get list of selfSM file ids in the output folder
-dx find data --path $VALIDATION_PROJECT:$INPUT_FOLDER_PATH --name "*.selfSM" --brief --no-recurse| \
+dx find data --path $VALIDATION_PROJECT:$INPUT_FOLDER_PATH --name "*.selfSM" --brief --norecurse| \
 # Loop through each file id
 while read -r file_id; do
     # then stream file content to stdout using cat
